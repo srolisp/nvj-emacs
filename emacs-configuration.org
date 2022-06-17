@@ -4,7 +4,10 @@ configuration loading. The threshold will be set lower at the end of
 the configuration to make each GC call faster for normal emacs use.
 #+begin_src emacs-lisp
   (setq gc-cons-threshold (* 60 1024 1024))
+#+end_src
 
+* Using straight.el
+#+begin_src emacs-lisp
   (defvar bootstrap-version)
   (let ((bootstrap-file
          (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
@@ -19,10 +22,21 @@ the configuration to make each GC call faster for normal emacs use.
     (load bootstrap-file nil 'nomessage))
 
   (straight-use-package 'use-package)
+  ;; https://github.com/Cobaltarena/emacs-config
+  ;; The void-function org-file-name-concat error occurs when the
+  ;; built-in version is loaded instead of the org version installed
+  ;; by use-package. Refer to the site above.
+  (straight-use-package 'org)
+
   (setq straight-use-package-by-default t)
 
   (use-package auto-compile
     :config (auto-compile-on-load-mode))
+#+end_src
+
+* Org mode
+
+#+begin_src emacs-lisp
 #+end_src
 
 * Personal information
@@ -152,6 +166,8 @@ the configuration to make each GC call faster for normal emacs use.
   (fset 'yes-or-no-p 'y-or-n-p)
 
   (save-place-mode t)
+
+  (setq debug-on-error t)
 
   (setq tab-width 4)
   (setq-default indent-tabs-mode nil) 
@@ -351,29 +367,68 @@ pyrightconfig.json
   ]
 }
 #+end_src
+direnv
+#+begin_src bash
+## BASH -> ~/.bashrc
+eval "$(direnv hook bash)"
+#+end_src
+conda
+Because anaconda does not support the aarchi64 platform, use archiconda or miniforge.
+#+begin_src bash
+  curl -L -O "https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge-pypy3-Linux-aarch64.sh"
+  bash Miniforge-pypy3-Linux-aarch64.sh
+#+end_src
+~/.direnvrc
+#+begin_src bash
+layout_anaconda() {
+  local ANACONDA_HOME="${HOME}/miniconda3/"
+  PATH_add "$ANACONDA_HOME"/bin
 
+  if [ -n "$1" ]; then
+    # Explicit environment name from layout command.
+    local env_name="$1"
+    source activate ${env_name}
+  elif (grep -q name: environment.yml); then
+    # Detect environment name from `environment.yml` file in `.envrc` directory
+    source activate `grep name: environment.yml | sed -e 's/name: //' | cut -d "'" -f 2 | cut -d '"' -f 2`
+  else
+    (>&2 echo No environment specified);
+    exit 1;
+  fi;
+}
+#+end_src
+~/.bashrc
+#+begin_src bash
+show_virtual_env() {
+  if [ -n "$CONDA_DEFAULT_ENV" ]; then
+    echo "($(basename $CONDA_DEFAULT_ENV))"
+  fi
+}
+export show_virtual_env
+PS1='$(show_virtual_env)'$PS1
+#+end_src
 * Org mode
 #+begin_src emacs-lisp
-  (use-package org
+;;  (use-package org
     ;; :ensure org-plus-contrib
     ;; :ensure org-tempo
     :custom 
     ;; Tab keeps indenting in src blocks
-    (org-src-tab-acts-natively t)
+;;    (org-src-tab-acts-natively t)
     ;; IDO for completion when applicable
-    (org-completion-use-ido t)
+;;    (org-completion-use-ido t)
     ;; hide emphasis markers
     ;;  (org-hide-emphasis-markers t)
     :config
     ;; (require 'org-tempo)
-    (add-hook 'org-mode-hook 
-              (lambda ()
-                (setq org-file-apps
-                      '(("org" . emacs)
-                        ("rs"  . emacs)
-                        ("c"   . emacs)
-                        ("h"   . emacs))))))
-  (setq org-hide-leading-stars t)
+;;    (add-hook 'org-mode-hook 
+;;              (lambda ()
+;;                (setq org-file-apps
+;;                      '(("org" . emacs)
+;;                        ("rs"  . emacs)
+;;                        ("c"   . emacs)
+;;                        ("h"   . emacs))))))
+;;  (setq org-hide-leading-stars t)
   ;; (setq initial-major-mode 'org-mode)
 
   ;; (global-set-key (kbd "C-c l") 'org-store-link)
@@ -468,24 +523,24 @@ pyrightconfig.json
   ;; ;; (use-package htmlize)
   ;; ;; (use-package gnuplot)
   ;; ;; (use-package gnuplot-mode)
-  (use-package ob-rust)
+;;  (use-package ob-rust)
 
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((emacs-lisp . t)
-     (C . t)
-     (latex . t)
-     (gnuplot . t)
-     (dot . t)
-     (java . t)
-     (python . t)
-     (makefile . t)
-     (org . t)
-     (perl . t)
-     (sed . t)
-     (shell . t)
+;;  (org-babel-do-load-languages
+;;   'org-babel-load-languages
+;;   '((emacs-lisp . t)
+;;     (C . t)
+;;     (latex . t)
+;;     (gnuplot . t)
+;;     (dot . t)
+;;     (java . t)
+;;     (python . t)
+;;     (makefile . t)
+;;     (org . t)
+;;     (perl . t)
+;;     (sed . t)
+;;     (shell . t)
      ;; (rust . t)
-     ))
+;;     ))
   ;; ;; (setq org-src-preserve-indentation t)
   ;; ;; (setq org-confirm-babel-evaluate nil)
   ;; ;; (use-package graphviz-dot-mode)
