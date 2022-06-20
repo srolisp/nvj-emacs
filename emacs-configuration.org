@@ -5,7 +5,7 @@ the configuration to make each GC call faster for normal emacs use.
 #+begin_src emacs-lisp
   (setq gc-cons-threshold (* 60 1024 1024))
 #+end_src
-
+         
 * Using straight.el
 #+begin_src emacs-lisp
   (defvar bootstrap-version)
@@ -23,10 +23,8 @@ the configuration to make each GC call faster for normal emacs use.
 
   (straight-use-package 'use-package)
   ;; https://github.com/Cobaltarena/emacs-config
-  ;; The void-function org-file-name-concat error occurs when the
-  ;; built-in version is loaded instead of the org version installed
-  ;; by use-package. Refer to the site above.
-  (straight-use-package 'org)
+  ;; The void-function org-file-name-concat error occurs 
+  ;; (straight-use-package 'org)
 
   (setq straight-use-package-by-default t)
 
@@ -37,6 +35,9 @@ the configuration to make each GC call faster for normal emacs use.
 * Org mode
 
 #+begin_src emacs-lisp
+  ;; SOLVED: org-file-name-concat error
+  (use-package org
+    :straight (:type built-in))
 #+end_src
 
 * Personal information
@@ -353,25 +354,21 @@ virtualenv
 .dir-locals.el
 #+begin_src emacs-lisp
   ;; ((python-mode . ((pyvenv-workon . "hackerrank-project"))))
-#+end_src
+ #+end_src
 pyrightconfig.json
 #+begin_src json
 {
   "include": [
-    "src"
+    "hackerrank"
   ],
   "executionEnvironments": [
     {
-      "root": "src"
+      "root": "hackerrank/src"
     }
   ]
 }
 #+end_src
 direnv
-#+begin_src bash
-## BASH -> ~/.bashrc
-eval "$(direnv hook bash)"
-#+end_src
 conda
 Because anaconda does not support the aarchi64 platform, use archiconda or miniforge.
 #+begin_src bash
@@ -399,36 +396,58 @@ layout_anaconda() {
 #+end_src
 ~/.bashrc
 #+begin_src bash
-show_virtual_env() {
-  if [ -n "$CONDA_DEFAULT_ENV" ]; then
-    echo "($(basename $CONDA_DEFAULT_ENV))"
-  fi
-}
-export show_virtual_env
-PS1='$(show_virtual_env)'$PS1
+  show_virtual_env() {
+      if [ -n "$VIRTUAL_ENV"]; then
+          echo "($(basename $VIRTUAL_ENV))"
+      elif [ -n "$CONDA_DEFAULT_ENV" ]; then
+          echo "($(basename $CONDA_DEFAULT_ENV))"
+      fi
+  }
+  export show_virtual_env
+  PS1='$(show_virtual_env)'$PS1
 #+end_src
+#+begin_src bash
+## BASH -> ~/.bashrc
+eval "$(direnv hook bash)"
+#+end_src
+
+* direnv
+#+begin_src emacs-lisp
+  (use-package direnv
+    :config
+    (direnv-mode))
+#+end_src
+
 * Org mode
 #+begin_src emacs-lisp
-;;  (use-package org
-    ;; :ensure org-plus-contrib
-    ;; :ensure org-tempo
-    :custom 
-    ;; Tab keeps indenting in src blocks
-;;    (org-src-tab-acts-natively t)
-    ;; IDO for completion when applicable
-;;    (org-completion-use-ido t)
-    ;; hide emphasis markers
-    ;;  (org-hide-emphasis-markers t)
-    :config
-    ;; (require 'org-tempo)
-;;    (add-hook 'org-mode-hook 
-;;              (lambda ()
-;;                (setq org-file-apps
-;;                      '(("org" . emacs)
-;;                        ("rs"  . emacs)
-;;                        ("c"   . emacs)
-;;                        ("h"   . emacs))))))
-;;  (setq org-hide-leading-stars t)
+  ;;  (use-package org
+  ;; :ensure org-plus-contrib
+  ;; :ensure org-tempo
+  ;;    :custom 
+  ;; Tab keeps indenting in src blocks
+  ;;    (org-src-tab-acts-natively t)
+  ;; IDO for completion when applicable
+  ;;    (org-completion-use-ido t)
+  ;; hide emphasis markers
+  ;;  (org-hide-emphasis-markers t)
+  ;;    :config
+  ;; (require 'org-tempo)
+  ;;    (add-hook 'org-mode-hook 
+  ;;              (lambda ()
+  ;;                (setq org-file-apps
+  ;;                      '(("org" . emacs)
+  ;;                        ("rs"  . emacs)
+  ;;                        ("c"   . emacs)
+  ;;                        ("h"   . emacs))))))
+  ;; (setq org-hide-leading-stars t)
+  (setq org-startup-indented t)
+  (setq org-indent-mode-turns-on-hiding-stars t)
+  ;; (when (and (eq 'light (frame-parameter nil 'background-mode))
+  ;;            (color-defined-p "brightwhite"))
+
+  ;; TODO: The foreground and bckground colors are not exactly the same.
+  (set-face-foreground 'org-hide "#002B00")
+  ;; )
   ;; (setq initial-major-mode 'org-mode)
 
   ;; (global-set-key (kbd "C-c l") 'org-store-link)
@@ -523,24 +542,39 @@ PS1='$(show_virtual_env)'$PS1
   ;; ;; (use-package htmlize)
   ;; ;; (use-package gnuplot)
   ;; ;; (use-package gnuplot-mode)
-;;  (use-package ob-rust)
+  ;;  (use-package ob-rust)
 
-;;  (org-babel-do-load-languages
-;;   'org-babel-load-languages
-;;   '((emacs-lisp . t)
-;;     (C . t)
-;;     (latex . t)
-;;     (gnuplot . t)
-;;     (dot . t)
-;;     (java . t)
-;;     (python . t)
-;;     (makefile . t)
-;;     (org . t)
-;;     (perl . t)
-;;     (sed . t)
-;;     (shell . t)
+  (org-babel-do-load-languages
+   'org-babel-load-languages
+   '((emacs-lisp . t)
+     (C . t)
+     (latex . t)
+     (gnuplot . t)
+     (dot . t)
+     (java . t)
+     (python . t)
+     (makefile . t)
+     (org . t)
+     (perl . t)
+     (sed . t)
+     (shell . t)
      ;; (rust . t)
-;;     ))
+     ))
+  (setq org-latex-pdf-process
+        '("latexmk -f -pdf -%latex=pdflatex -interaction=nonstopmode -output-directory=%o %f"))
+  ;; (with-eval-after-load 'ox-latex
+  ;;   (add-to-list 'org-latex-classes
+  ;;                '("IEEEtran"
+  ;;                  "\\documentclass{IEEEtran}
+  ;;          [NO-DEFAULT-PACKAGES]
+  ;;          [PACKAGES]
+  ;;          [EXTRA]"
+  ;;                  ("\\section{%s}" . "\\section*{%s}")
+  ;;                  ("\\subsection{%s}" . "\\subsection*{%s}")
+  ;;                  ("\\subsubsection{%s}" . "\\subsubsection*{%s}")
+  ;;                  ("\\paragraph{%s}" . "\\paragraph*{%s}")
+  ;;                  ("\\subparagraph{%s}" . "\\subparagraph*{%s}")
+  ;;                  )))
   ;; ;; (setq org-src-preserve-indentation t)
   ;; ;; (setq org-confirm-babel-evaluate nil)
   ;; ;; (use-package graphviz-dot-mode)
@@ -553,7 +587,53 @@ PS1='$(show_virtual_env)'$PS1
   ;; https://gitlab.univ-lille.fr/michael.hauspie/emacs/-/blob/master/configuration.org
   ;; Developpement - LSP
 #+end_src
+ 
+* org-latex-IEEEtran
+Prerequisites
++ pandoc
+  #+begin_src bash
+    sudo dpkg -i pandoc-2.18-1-arm64.deb
+  #+end_src
 
+Installation 
+#+begin_src emacs-lisp
+  (use-package bibtex-completion)
+  (use-package org-ref)
+#+end_src
+
+* org-noter
+;; #+begin_src emacs-lisp
+;;   (use-package org-noter)
+;; #+end_src
+  
+* tex
+Installation
+#+begin_src bash
+  sudo apt install texlive-ful
+#+end_src
+For HANGLE
+# #+Latex_HEADER: \usepackage{kotex}
+
+* pdf-tools
+Can't view pdf file in terminal like blink shell
+#+begin_src bash
+  sudo apt install libpng-dev zlib1g-dev libpoppler-glib-dev
+  sudo apt install imagemagick
+#+end_src
+
+#+begin_src emacs-lisp
+  (use-package pdf-tools
+    :config
+    (pdf-tools-install))
+#+end_src
+
+When latexmk error occur
+#+begin_src emacs-lisp
+  (setq org-latex-pdf-process
+        '("latexmk -f -pdf -%latex=pdflatex -interaction=nonstopmode -output-directory=%o %f"))
+#+end_src
+
+* finally
 #+begin_src emacs-lisp
   (setq gc-cons-threshold (* 2 1024 1024))
 #+end_src
