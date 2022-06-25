@@ -633,6 +633,95 @@ When latexmk error occur
         '("latexmk -f -pdf -%latex=pdflatex -interaction=nonstopmode -output-directory=%o %f"))
 #+end_src
 
+* for clisp
+#+begin_src bash
+  sudo apt-get -y install git build-essential automake libcurl4-openssl-dev
+  git clone -b release https://github.com/roswell/roswell.git
+  cd roswell
+  sh bootstrap
+  ./configure
+  make
+  sudo make install
+  ros setup
+#+end_src
+
+Newest sbcl, because sbcl-bin seems not to support multithreading
+#+begin_src bash
+  ros install sbcl
+#+end_src
+Installed list
+#+begin_src bash
+  ros list installed
+#+end_src
+Check for the currently active implementation/version
+#+begin_src bash
+  ros run -- --version
+#+end_src
+Switch to another implementation/version
+#+begin_src bash
+  ros use sbcl/2.1.7
+#+end_src
+
+for rlwrap
+#+begin_src bash
+  sudo apt-get install rlwrap
+#+end_src
+after installing, apt-get messages
+# update-alternatives: using /usr/bin/rlwrap to provide /usr/bin/readline-editor (readline-editor) in auto mode
+# update-alternatives: warning: skip creation of /usr/share/man/man1/readline-editor.1.gz because associated file /usr/share/man/man1/rlwrap.1.gz (of link group readline-editor) doesn't exist
+
+slime
+#+begin_src bash
+  ros install sbcl
+#+end_src
+ros install slime
+
+# Installing from github 2022.04.01
+# Downloading http://beta.quicklisp.org/dist/quicklisp-versions.txt
+# [##########################################################################]100%
+# Downloading http://beta.quicklisp.org/dist/quicklisp/2022-04-01/distinfo.txt
+# [##########################################################################]100%
+# Downloading http://beta.quicklisp.org/dist/quicklisp/2022-04-01/releases.txt
+# [##########################################################################]100%
+# Downloading http://beta.quicklisp.org/archive/slime/2022-02-20/slime-v2.27.tgz
+# [##########################################################################]100%
+# helper.el installed in "/home/srolisp/.roswell/helper.el"
+
+# To use, add this to your ~/.emacs:
+
+#   (load (expand-file-name "~/.roswell/helper.el"))
+
+ros install swank
+#+begin_src emacs-lisp
+  (use-package slime
+    :ensure t
+    :config
+    (load (expand-file-name "~/.roswell/helper.el"))
+    ;; set memory of sbcl to your machine's RAM size for sbcl and clisp
+    ;; (but for others - I didn't used them yet)
+    (defun linux-system-ram-size ()
+      (string-to-number (shell-command-to-string "free --mega | awk 'FNR == 2 {print $2}'")))
+    ;; (linux-system-ram-size)
+    (setq inferior-lisp-program (concat "ros -Q dynamic-space-size="     
+                                        (number-to-string (linux-system-ram-size)) 
+                                        " run"))
+    ;; and for fancier look I personally add:
+    (setq slime-contribs '(slime-fancy))
+    ;; ensure correct indentation e.g. of `loop` form
+    (add-to-list 'slime-contribs 'slime-cl-indent)
+    ;; don't use tabs
+    (setq-default indent-tabs-mode nil))
+#+end_src
+
+Start the REPL(by using `rlwrap`)
+#+begin_src bash
+  ros run
+  # or better: rlwrap -ing sbcl is very helpful, because the
+  # "naked" sbcl REPL doesn't allow jumps inside the line or other useful
+  # editing commands which one is used to when using the ubuntu shell REPL.
+  rlwrap ros run
+#+end_src
+
 * finally
 #+begin_src emacs-lisp
   (setq gc-cons-threshold (* 2 1024 1024))
